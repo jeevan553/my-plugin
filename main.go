@@ -1,37 +1,40 @@
-// main.go
 package main
 
 import (
 	"log"
+	"os"
 	"plugin"
+	"reflect"
 )
 
 func main() {
-	// Set environment variables
-	//os.Setenv("USERNAME", "user123")
-	//os.Setenv("PASSWORD", "password123")
-	//os.Setenv("OTHER_PARAM", "some_value")
-
 	// Open the plugin
 	plug, err := plugin.Open("plugin.so")
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	// Lookup the Exec function in the plugin
+	// Lookup the Exec function
 	execFunc, err := plug.Lookup("Exec")
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	// Assert the function type
-	hello, ok := execFunc.(func())
-	if !ok {
-		log.Fatal("Plugin has no 'Exec' function with the correct signature")
+	// Use reflection to call Exec dynamically
+	exec := reflect.ValueOf(execFunc)
+
+	// Ensure Exec is a function
+	if exec.Kind() != reflect.Func {
+		log.Fatal("Exec is not a function")
 	}
 
-	// Call the Exec function from the plugin
-	hello()
+	// Get environment variables
+	args := []reflect.Value{
+		reflect.ValueOf(os.Getenv("USERNAME")),
+		reflect.ValueOf(os.Getenv("PASSWORD")),
+		reflect.ValueOf(os.Getenv("OTHERPARAM")),
+	}
 
-	// Output: "Hello from the plugin!"
+	// Call the function dynamically
+	exec.Call(args)
 }

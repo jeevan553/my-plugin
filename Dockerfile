@@ -5,14 +5,16 @@ FROM golang:1.20 AS builder
 WORKDIR /app
 
 # Copy the plugin source code and main program
-COPY plugin/plugin.go ./plugin/plugin.go
-COPY main.go ./main.go
+COPY . .
+# COPY plugin.go ./plugin.go
+# COPY main.go ./main.go
+# COPY common.go ./common.go
 
 # Build the plugin (plugin.so)
-RUN go build -o plugin.so -buildmode=plugin ./plugin/plugin.go
+RUN go build -o plugin.so -buildmode=plugin ./plugin.go ./common.go
 
 # Build the main program
-RUN go build -o main main.go
+RUN go build -o main main.go ./common.go
 
 # Step 2: Create the runtime image using Ubuntu 22.04 (which has the required GLIBC version)
 FROM ubuntu:22.04
